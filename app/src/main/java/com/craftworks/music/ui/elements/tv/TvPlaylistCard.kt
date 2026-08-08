@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.tv.material3.Card
 import androidx.tv.material3.ExperimentalTvMaterial3Api
@@ -39,7 +40,7 @@ fun TvPlaylistCard(
                 content = {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data(playlist.mediaMetadata.artworkUri)
+                            .data(playlist.mediaMetadata.artworkUri?.toString()?.replace("size=128", "size=500")?.toUri())
                             .diskCacheKey(playlist.mediaMetadata.extras?.getString("navidromeID"))
                             .crossfade(true)
                             .build(),

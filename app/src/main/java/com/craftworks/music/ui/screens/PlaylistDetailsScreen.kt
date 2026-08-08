@@ -57,6 +57,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.MediaItem
@@ -163,7 +164,9 @@ fun PlaylistDetails(
                                         ?.startsWith("Local") == true
                                 )
                                     playlistMetadata.artworkData else
-                                    playlistMetadata?.artworkUri
+                                    playlistMetadata?.artworkUri?.toString()
+                                        ?.replace("size=128", "size=500")
+                                        ?.toUri()
                             )
                             .crossfade(true)
                             .diskCacheKey(

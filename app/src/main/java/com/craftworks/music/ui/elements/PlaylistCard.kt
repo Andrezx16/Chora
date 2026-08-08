@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
@@ -54,7 +55,9 @@ fun PlaylistCard(playlist: MediaItem, onClick: () -> Unit) {
                 .data(
                     if (metadata.extras?.getString("navidromeID")?.startsWith("Local") == true)
                         metadata.artworkData else
-                        metadata.artworkUri
+                        metadata.artworkUri?.toString()
+                            ?.replace("size=128", "size=500")
+                            ?.toUri()
                 )
                 .crossfade(true)
                 .diskCacheKey(

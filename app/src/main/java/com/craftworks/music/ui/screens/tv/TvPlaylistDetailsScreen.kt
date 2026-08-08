@@ -45,6 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.session.MediaController
 import androidx.navigation.NavHostController
@@ -118,7 +119,7 @@ fun TvPlaylistDetails(
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(playlistMetadata?.artworkUri)
+                        .data(playlistMetadata?.artworkUri?.toString()?.replace("size=128", "size=500")?.toUri())
                         .diskCacheKey(playlistMetadata?.extras?.getString("navidromeID"))
                         .crossfade(true)
                         .build(),

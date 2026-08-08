@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
@@ -161,7 +162,9 @@ fun AddSongToPlaylist(
                                 val artwork = if (playlist.mediaMetadata.extras?.getString("navidromeID")?.startsWith("Local") == true)
                                     playlist.mediaMetadata.artworkData
                                 else
-                                    playlist.mediaMetadata.artworkUri
+                                    playlist.mediaMetadata.artworkUri?.toString()
+                                        ?.replace("size=128", "size=500")
+                                        ?.toUri()
 
                                 SubcomposeAsyncImage (
                                     model = ImageRequest.Builder(LocalContext.current)

@@ -144,8 +144,6 @@ private suspend fun loadBitmapFromUrl(imageUrl: String, context: Context): Bitma
                         connection.connect()
                         val inputStream = connection.inputStream
                         val options = BitmapFactory.Options().apply {
-                            outWidth = 64
-                            outHeight = 64
                             inPreferredConfig = Bitmap.Config.ARGB_8888
                         }
                         val bitmap = BitmapFactory.decodeStream(inputStream, null, options)
@@ -163,7 +161,7 @@ private suspend fun loadBitmapFromUrl(imageUrl: String, context: Context): Bitma
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     val source = ImageDecoder.createSource(context.contentResolver, uri)
                     ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
-                        decoder.setTargetSize(64, 64)
+                        decoder.setTargetSize(512, 512)
                         // Disable hardware acceleration
                         decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
                     }
