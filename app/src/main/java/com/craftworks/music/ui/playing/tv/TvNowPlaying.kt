@@ -144,6 +144,14 @@ fun TvNowPlaying(
                                 mediaController?.seekForward()
                             }
 
+                            KeyEvent.KEYCODE_CHANNEL_UP -> {
+                                mediaController?.seekToNext()
+                            }
+
+                            KeyEvent.KEYCODE_CHANNEL_DOWN -> {
+                                mediaController?.seekToPrevious()
+                            }
+
                             else -> return@onKeyEvent false
                         }
                         return@onKeyEvent true
@@ -334,9 +342,19 @@ fun TvNowPlaying(
                         .onKeyEvent { keyEvent ->
                             if (keyEvent.type == KeyEventType.KeyDown) {
                                 if (controlsVisible) {
-                                    if (keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_DPAD_UP || keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_BACK) {
-                                        controlsVisible = false
-                                        return@onKeyEvent true
+                                    when (keyEvent.nativeKeyEvent.keyCode) {
+                                        KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_BACK -> {
+                                            controlsVisible = false
+                                            return@onKeyEvent true
+                                        }
+                                        KeyEvent.KEYCODE_CHANNEL_UP -> {
+                                            mediaController?.seekToNext()
+                                            return@onKeyEvent true
+                                        }
+                                        KeyEvent.KEYCODE_CHANNEL_DOWN -> {
+                                            mediaController?.seekToPrevious()
+                                            return@onKeyEvent true
+                                        }
                                     }
                                     interactionFlow.tryEmit(Unit)
                                 }
