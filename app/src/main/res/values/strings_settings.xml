@@ -18,6 +18,7 @@
         <string name="Setting_TrackNumbersAlbum">Show Track Numbers in Album View</string>
     <string name="Settings_Header_Media">Media Providers</string>
     <string name="Settings_Header_Playback">Playback</string>
+    <string name="Settings_Header_Refresh">Refresh Library</string>
         <string name="Setting_Transcoding">Max Bitrate</string>
         <string name="Setting_Transcoding_Wifi">Max Bitrate (WiFi)</string>
         <string name="Setting_Transcoding_Data">Max Bitrate (Mobile data)</string>

@@ -1,5 +1,6 @@
 package com.craftworks.music.ui.screens.tv
 
+import android.widget.Toast
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,12 +10,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,6 +30,8 @@ import androidx.tv.material3.Text
 import androidx.tv.material3.WideButton
 import com.craftworks.music.R
 import com.craftworks.music.data.model.Screen
+import com.craftworks.music.managers.DataRefreshManager
+import kotlinx.coroutines.launch
 
 
 @Preview(
@@ -37,6 +42,8 @@ fun TvSettingScreen(
     navHostController: NavHostController = rememberNavController()
 ) {
     val focusRequester = remember { FocusRequester() }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -78,6 +85,36 @@ fun TvSettingScreen(
             navHostController,
             Modifier.onFocusChanged {
                 focusRequester.saveFocusedChild()
+            }
+        )
+
+        WideButton(
+            modifier = Modifier.onFocusChanged {
+                focusRequester.saveFocusedChild()
+            },
+            onClick = {
+                scope.launch {
+                    context.cacheDir.listFiles()?.forEach { file ->
+                        if (file.isDirectory) {
+                            file.deleteRecursively()
+                        }
+                    }
+                    DataRefreshManager.notifyDataSourcesChanged()
+                }
+                Toast.makeText(context, R.string.Settings_Header_Refresh, Toast.LENGTH_SHORT).show()
+            },
+            contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
+            icon = {
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.s_m_refresh),
+                    contentDescription = null,
+                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                )
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.Settings_Header_Refresh), modifier = Modifier
+                )
             }
         )
     }
