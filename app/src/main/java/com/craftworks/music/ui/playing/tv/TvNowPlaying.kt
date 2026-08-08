@@ -55,6 +55,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -282,7 +283,11 @@ fun TvNowPlaying(
                         true,
                         mediaController,
                         PaddingValues(24.dp),
-                        onRefreshLyrics
+                        onRefreshLyrics,
+                        lyricsAnimSpeed = 800,
+                        lyricsTextStyle = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.Bold
+                        )
                     )
                 }
             }

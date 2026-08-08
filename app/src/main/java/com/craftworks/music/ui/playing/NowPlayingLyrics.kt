@@ -67,6 +67,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextMotion
@@ -100,6 +101,8 @@ fun LyricsView(
     mediaController: MediaController?,
     paddingValues: PaddingValues = PaddingValues(),
     onRefreshLyrics: () -> Unit = {},
+    lyricsAnimSpeed: Int? = null,
+    lyricsTextStyle: TextStyle? = null,
 ) {
     val lyrics by LyricsState.lyrics.collectAsStateWithLifecycle()
     val loading by LyricsState.loading.collectAsStateWithLifecycle()
@@ -122,6 +125,8 @@ fun LyricsView(
     val lyricsRecenter by appearanceSettingsManager.lyricsRecenterAfterScroll.collectAsStateWithLifecycle(
         true
     )
+
+    val effectiveAnimSpeed = lyricsAnimSpeed ?: lyricsAnimationSpeed
 
     // State holding the current position
     var currentPosition by remember {
@@ -209,7 +214,7 @@ fun LyricsView(
 
                         state.animateScrollBy(
                             value = finalScrollDelta.toFloat(),
-                            animationSpec = tween(lyricsAnimationSpeed, 0, FastOutSlowInEasing)
+                            animationSpec = tween(effectiveAnimSpeed, 0, FastOutSlowInEasing)
                         )
                     } else
                         state.animateScrollToItem(
@@ -333,8 +338,10 @@ fun LyricsView(
                                     useBlur = useBlur,
                                     visibleItemsInfo = visibleItemsInfo,
                                     color = color,
-                                    lyricsAnimationSpeed = lyricsAnimationSpeed,
+                                    lyricsAnimationSpeed = effectiveAnimSpeed,
                                     lyricsAlignment = lyricsAlignment,
+                                    animationSpeed = effectiveAnimSpeed,
+                                    textStyle = lyricsTextStyle,
                                     onClick = {
                                         mediaController?.seekTo(lyric.startMs.toLong())
                                         currentPosition = lyric.startMs
@@ -349,8 +356,10 @@ fun LyricsView(
                                     useBlur = useBlur,
                                     visibleItemsInfo = visibleItemsInfo,
                                     color = color,
-                                    lyricsAnimationSpeed = lyricsAnimationSpeed,
+                                    lyricsAnimationSpeed = effectiveAnimSpeed,
                                     lyricsAlignment = lyricsAlignment,
+                                    animationSpeed = effectiveAnimSpeed,
+                                    textStyle = lyricsTextStyle,
                                     onClick = {
                                         mediaController?.seekTo(lyric.startMs.toLong())
                                         currentPosition = lyric.startMs
@@ -363,7 +372,7 @@ fun LyricsView(
                         item {
                             Text(
                                 text = lyrics[0].text[0],
-                                style = MaterialTheme.typography.headlineMedium,
+                                style = lyricsTextStyle ?: MaterialTheme.typography.headlineMedium,
                                 color = color,
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -397,19 +406,21 @@ fun WordSyncedLyricItem(
     lyricsAnimationSpeed: Int = 1200,
     lyricsAlignment: NowPlayingAlignment,
     onClick: () -> Unit = {},
+    animationSpeed: Int = 1200,
+    textStyle: TextStyle? = null,
 ) {
     val lyricBlur: Dp by animateDpAsState(
         targetValue = if (useBlur) calculateLyricBlur(
             index, currentLyricIndex, visibleItemsInfo
         ) else 0.dp,
         label = "Lyric Blur",
-        animationSpec = tween(lyricsAnimationSpeed, 0, FastOutSlowInEasing)
+        animationSpec = tween(animationSpeed, 0, FastOutSlowInEasing)
     )
 
     val scale by animateFloatAsState(
         targetValue = if (currentLyricIndex == index) 1f else 0.9f,
         label = "Lyric Scale Animation",
-        animationSpec = tween(lyricsAnimationSpeed, 0, FastOutSlowInEasing)
+        animationSpec = tween(animationSpeed, 0, FastOutSlowInEasing)
     )
 
     if (lyric.text[0].isEmpty()) {
@@ -467,7 +478,9 @@ fun WordSyncedLyricItem(
                         wordText = word.text,
                         isActive = isThisWordActive,
                         durationMillis = duration,
-                        color = color
+                        color = color,
+                        animationSpeed = animationSpeed,
+                        textStyle = textStyle
                     )
                 }
             }
@@ -481,7 +494,9 @@ fun AnimatedWord(
     wordText: String,
     isActive: Boolean,
     durationMillis: Int,
-    color: Color
+    color: Color,
+    animationSpeed: Int = 1200,
+    textStyle: TextStyle? = null,
 ) {
     val inactiveColor = color.copy(alpha = 0.4f)
     val wipeProgress = remember { Animatable(0f) }
@@ -525,7 +540,7 @@ fun AnimatedWord(
     val yOffset = remember { Animatable(0f) }
     LaunchedEffect(isActive) {
         if (isActive) {
-            yOffset.animateTo(-dipAmount, tween(120, easing = FastOutSlowInEasing))
+            yOffset.animateTo(-dipAmount, tween(animationSpeed / 10, easing = FastOutSlowInEasing))
             yOffset.animateTo(0f, spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessLow))
         } else {
             yOffset.animateTo(0f, tween(durationMillis, 0, FastOutSlowInEasing))
@@ -534,7 +549,7 @@ fun AnimatedWord(
 
     Text(
         text = wordText,
-        style = MaterialTheme.typography.titleLarge.copy(
+        style = (textStyle ?: MaterialTheme.typography.titleLarge).copy(
             fontWeight = FontWeight.SemiBold,
             textMotion = TextMotion.Animated
         ),
@@ -567,11 +582,13 @@ fun SyncedLyricItem(
     lyricsAnimationSpeed: Int = 1200,
     lyricsAlignment: NowPlayingAlignment,
     onClick: () -> Unit = {},
+    animationSpeed: Int = 1200,
+    textStyle: TextStyle? = null,
 ) {
     val lyricAlpha: Float by animateFloatAsState(
         targetValue = if (currentLyricIndex == index) 1f else 0.5f,
         label = "Current Lyric Alpha",
-        animationSpec = tween(lyricsAnimationSpeed, 0, FastOutSlowInEasing)
+        animationSpec = tween(animationSpeed, 0, FastOutSlowInEasing)
     )
 
     val lyricBlur: Dp by animateDpAsState(
@@ -579,13 +596,13 @@ fun SyncedLyricItem(
             index, currentLyricIndex, visibleItemsInfo
         ) else 0.dp,
         label = "Lyric Blur",
-        animationSpec = tween(lyricsAnimationSpeed / 2, 0, FastOutSlowInEasing)
+        animationSpec = tween(animationSpeed / 2, 0, FastOutSlowInEasing)
     )
 
     val scale by animateFloatAsState(
         targetValue = if (currentLyricIndex == index) 1f else 0.9f,
         label = "Lyric Scale Animation",
-        animationSpec = tween(lyricsAnimationSpeed, 0, FastOutSlowInEasing)
+        animationSpec = tween(animationSpeed, 0, FastOutSlowInEasing)
     )
 
     if (lyric.text[0].isEmpty()) {
@@ -638,7 +655,7 @@ fun SyncedLyricItem(
             lyric.text.forEachIndexed { i, line ->
                 Text(
                     text = line,
-                    style = if (i == 0) MaterialTheme.typography.titleLarge
+                    style = if (i == 0) (textStyle ?: MaterialTheme.typography.titleLarge)
                     else MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = color.copy(alpha = if (i == 0) lyricAlpha else lyricAlpha * 0.65f),
