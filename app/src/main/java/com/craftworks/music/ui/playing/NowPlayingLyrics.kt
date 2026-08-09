@@ -74,6 +74,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextMotion
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
@@ -317,7 +318,7 @@ fun LyricsView(
                         ),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    contentPadding = PaddingValues(vertical = 32.dp),
+                    contentPadding = PaddingValues(vertical = 24.dp),
                     state = state,
                 ) {
                     currentResult?.provider?.let { provider ->
@@ -385,8 +386,9 @@ fun LyricsView(
                         item {
                             Text(
                                 text = lyrics[0].text[0],
-                                style = lyricsTextStyle ?: MaterialTheme.typography.headlineMedium,
-                                color = color,
+                                style = lyricsTextStyle ?: TextStyle(fontSize = 26.sp),
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.White,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(16.dp)
@@ -461,7 +463,7 @@ fun WordSyncedLyricItem(
     } else {
         Column(
             modifier = Modifier
-                .padding(vertical = 12.dp)
+                .padding(vertical = 8.dp)
                 .heightIn(min = 48.dp)
                 .focusable(false)
                 .graphicsLayer {
@@ -511,7 +513,7 @@ fun AnimatedWord(
     animationSpeed: Int = 1200,
     textStyle: TextStyle? = null,
 ) {
-    val inactiveColor = color.copy(alpha = 0.4f)
+    val inactiveColor = Color.White.copy(alpha = 0.28f)
     val wipeProgress = remember { Animatable(0f) }
     val textAlpha = remember { Animatable(1f) }
 
@@ -530,7 +532,7 @@ fun AnimatedWord(
         } else {
             wipeProgress.snapTo(0f)
             textAlpha.animateTo(
-                targetValue = 0.4f,
+                targetValue = 0.28f,
                 animationSpec = tween(durationMillis = 400, easing = LinearEasing)
             )
         }
@@ -541,13 +543,13 @@ fun AnimatedWord(
         val activeEnd = (currentOffset - 0.3f).coerceIn(0f, 1f)
         val inactiveStart = currentOffset.coerceIn(0f, 1f)
         Brush.horizontalGradient(
-            0f to color,
-            activeEnd to color,
+            0f to Color.White,
+            activeEnd to Color.White,
             inactiveStart to inactiveColor,
             1f to inactiveColor
         )
     } else {
-        SolidColor(color)
+        if (isActive) SolidColor(Color.White) else SolidColor(inactiveColor)
     }
 
     val yOffset = remember { Animatable(0f) }
@@ -562,8 +564,8 @@ fun AnimatedWord(
 
     Text(
         text = wordText,
-        style = (textStyle ?: MaterialTheme.typography.titleLarge).copy(
-            fontWeight = FontWeight.SemiBold,
+        style = (textStyle ?: TextStyle(fontSize = 26.sp)).copy(
+            fontWeight = FontWeight.ExtraBold,
             textMotion = TextMotion.Animated
         ),
         modifier = Modifier
@@ -599,7 +601,7 @@ fun SyncedLyricItem(
     textStyle: TextStyle? = null,
 ) {
     val lyricAlpha: Float by animateFloatAsState(
-        targetValue = if (currentLyricIndex == index) 1f else 0.5f,
+        targetValue = if (currentLyricIndex == index) 1f else 0.28f,
         label = "Current Lyric Alpha",
         animationSpec = tween(animationSpeed, 0, FastOutSlowInEasing)
     )
@@ -643,7 +645,7 @@ fun SyncedLyricItem(
     } else {
         Column(
             modifier = Modifier
-                .padding(vertical = 12.dp)
+                .padding(vertical = 8.dp)
                 .heightIn(min = 48.dp)
                 .focusable(false)
                 .graphicsLayer {
@@ -668,10 +670,10 @@ fun SyncedLyricItem(
             lyric.text.forEachIndexed { i, line ->
                 Text(
                     text = line,
-                    style = if (i == 0) (textStyle ?: MaterialTheme.typography.titleLarge)
+                    style = if (i == 0) (textStyle ?: TextStyle(fontSize =26.sp))
                     else MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = color.copy(alpha = if (i == 0) lyricAlpha else lyricAlpha * 0.65f),
+                    fontWeight = FontWeight.ExtraBold,
+                    color = if (i == 0) Color.White.copy(alpha = lyricAlpha) else color.copy(alpha = lyricAlpha * 0.65f),
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = when (lyricsAlignment) {
                         NowPlayingAlignment.LEFT -> TextAlign.Start
@@ -739,7 +741,7 @@ private fun calculateLyricBlur(
 ): Dp {
     return when {
         index == currentLyricIndex || !visibleItemsInfo.any { it.index == currentLyricIndex } -> 0.dp
-        else -> minOf(abs(currentLyricIndex - index).toFloat(), 8f).dp
+        else -> minOf(abs(currentLyricIndex - index).toFloat(), 12f).dp
     }
 }
 
