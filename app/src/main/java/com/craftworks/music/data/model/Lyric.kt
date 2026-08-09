@@ -21,14 +21,37 @@ data class SyncedWord(
     val endMs: Int?
 )
 
+enum class SyncType {
+    NONE, LINE, WORD, SYLLABLE
+}
+
+data class LyricsResult(
+    val lyrics: List<Lyric>,
+    val provider: String,
+    val syncType: SyncType
+)
+
 // LRCLIB Lyrics
 @Serializable
 data class LrcLibLyrics(
     val id: Int,
     val instrumental: Boolean,
-    val plainLyrics: String? = "",
-    val syncedLyrics: String? = "",
-    val lyricsfile: String? = "",
+    val plainLyrics: String? = null,
+    val syncedLyrics: String? = null,
+    val lyricsfile: String? = null,
+)
+
+@Serializable
+data class LrcLibSearchResult(
+    val id: Int,
+    val trackName: String = "",
+    val artistName: String = "",
+    val albumName: String = "",
+    val duration: Int = 0,
+    val instrumental: Boolean = false,
+    val plainLyrics: String? = null,
+    val syncedLyrics: String? = null,
+    val lyricsfile: String? = null,
 )
 
 // NetEase Lyrics
@@ -101,7 +124,7 @@ fun MediaData.StructuredLyrics.toLyrics(): List<Lyric> {
 fun LrcLibLyrics.toLyrics(): List<Lyric> {
     if (instrumental) return listOf()
 
-    if (lyricsfile.toString() != "null") {
+    if (!lyricsfile.isNullOrBlank()) {
         val settings = LoadSettings.builder().build()
         val raw = Load(settings).loadFromString(lyricsfile) as? Map<*, *>
             ?: throw IllegalArgumentException("Invalid YAML format")
@@ -129,9 +152,9 @@ fun LrcLibLyrics.toLyrics(): List<Lyric> {
         }
         return lines
     }
-    else if (syncedLyrics.toString() != "null") {
+    else if (!syncedLyrics.isNullOrBlank()) {
         val raw = mutableListOf<Pair<Int, String>>()
-        syncedLyrics?.lines()?.forEach { lyric ->
+        syncedLyrics.lines().forEach { lyric ->
             if (lyric.isBlank())
                 return@forEach
             val timeStampsRaw = getTimeStamps(lyric)[0]
@@ -145,9 +168,9 @@ fun LrcLibLyrics.toLyrics(): List<Lyric> {
             .map { (time, lines) -> Lyric(time, lines.map { it.second }) }
             .sortedBy { it.startMs }
     }
-    else if (plainLyrics.toString() != "null") {
+    else if (!plainLyrics.isNullOrBlank()) {
         Log.d("LYRICS", "Got LRCLIB plain lyrics: $plainLyrics")
-        return listOf(Lyric(-1, listOf(plainLyrics.toString())))
+        return listOf(Lyric(-1, listOf(plainLyrics)))
     }
     else
         return listOf()

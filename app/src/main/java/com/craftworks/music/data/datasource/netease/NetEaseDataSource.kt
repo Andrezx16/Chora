@@ -3,9 +3,13 @@ package com.craftworks.music.data.datasource.netease
 import android.content.Context
 import android.util.Log
 import androidx.media3.common.MediaMetadata
+import com.craftworks.music.data.datasource.LyricsDataSource
 import com.craftworks.music.data.model.Lyric
+import com.craftworks.music.data.model.LyricsResult
 import com.craftworks.music.data.model.NeteaseLyricsResponse
+import com.craftworks.music.data.model.SyncType
 import com.craftworks.music.data.model.toLyrics
+import com.craftworks.music.managers.settings.MediaProviderSettingsManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -24,6 +28,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -55,8 +60,17 @@ data class NeteaseArtist(
 
 @Singleton
 class NeteaseDataSource @Inject constructor(
+    private val settingsManager: MediaProviderSettingsManager,
     @ApplicationContext context: Context
-) {
+) : LyricsDataSource {
+
+    override val name: String = "NetEase"
+
+    override suspend fun getLyrics(metadata: MediaMetadata?, ignoreCachedResponse: Boolean): LyricsResult {
+        val enabled = settingsManager.netEaseLyricsFlow.first()
+        if (!enabled) return LyricsResult(emptyList(), name, SyncType.NONE)
+        return getNeteaseLyrics(metadata)
+    }
     private val client = HttpClient(OkHttp) {
         install(ContentNegotiation) {
             json(Json {
@@ -78,18 +92,20 @@ class NeteaseDataSource @Inject constructor(
     private val userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
 
-    suspend fun getNeteaseLyrics(metadata: MediaMetadata?): List<Lyric> = withContext(Dispatchers.IO) {
+    suspend fun getNeteaseLyrics(metadata: MediaMetadata?): LyricsResult = withContext(Dispatchers.IO) {
         try {
-            val title  = metadata?.title?.toString() ?: return@withContext emptyList()
+            val title  = metadata?.title?.toString() ?: return@withContext LyricsResult(emptyList(), name, SyncType.NONE)
             val artist = metadata.extras?.getString("lyricsArtist") ?: ""
 
-            val songId = searchSongId(title, artist) ?: return@withContext emptyList()
+            val songId = searchSongId(title, artist) ?: return@withContext LyricsResult(emptyList(), name, SyncType.NONE)
             val lyricsResponse = fetchLyrics(songId)
+            val lyrics = lyricsResponse.toLyrics()
 
-            lyricsResponse.toLyrics()
+            val syncType = if (lyrics.isNotEmpty() && lyrics.any { it.startMs >= 0 }) SyncType.LINE else SyncType.NONE
+            LyricsResult(lyrics, name, syncType)
         } catch (e: Exception) {
             e.printStackTrace()
-            emptyList()
+            LyricsResult(emptyList(), name, SyncType.NONE)
         }
     }
 

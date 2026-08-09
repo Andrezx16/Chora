@@ -104,6 +104,7 @@ fun LyricsView(
 ) {
     val lyrics by LyricsState.lyrics.collectAsStateWithLifecycle()
     val loading by LyricsState.loading.collectAsStateWithLifecycle()
+    val currentResult by LyricsState.currentResult.collectAsStateWithLifecycle()
     var isRefreshing by remember { mutableStateOf(false) }
 
     val appearanceSettingsManager = AppearanceSettingsManager(LocalContext.current)
@@ -319,6 +320,23 @@ fun LyricsView(
                     contentPadding = PaddingValues(vertical = 32.dp),
                     state = state,
                 ) {
+                    currentResult?.provider?.let { provider ->
+                        item(key = "provider_header") {
+                            Text(
+                                text = "Lyrics from $provider",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = color.copy(alpha = 0.6f),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 8.dp),
+                                textAlign = when (lyricsAlignment) {
+                                    NowPlayingAlignment.LEFT -> TextAlign.Start
+                                    NowPlayingAlignment.CENTER -> TextAlign.Center
+                                    NowPlayingAlignment.RIGHT -> TextAlign.End
+                                }
+                            )
+                        }
+                    }
                     if (lyrics.size > 1) {
                         itemsIndexed(
                             lyrics,
@@ -459,9 +477,9 @@ fun WordSyncedLyricItem(
             FlowRow (
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = when (lyricsAlignment) {
-                    NowPlayingAlignment.LEFT -> Arrangement.Start
-                    NowPlayingAlignment.CENTER -> Arrangement.Center
-                    NowPlayingAlignment.RIGHT -> Arrangement.End
+                    NowPlayingAlignment.LEFT -> Arrangement.spacedBy(4.dp, Alignment.Start)
+                    NowPlayingAlignment.CENTER -> Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally)
+                    NowPlayingAlignment.RIGHT -> Arrangement.spacedBy(4.dp, Alignment.End)
                 }
             ) {
                 lyric.words?.forEachIndexed { i, word ->
