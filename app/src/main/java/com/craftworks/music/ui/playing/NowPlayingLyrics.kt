@@ -46,6 +46,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -83,9 +84,6 @@ import com.gigamole.composefadingedges.FadingEdgesGravity
 import com.gigamole.composefadingedges.content.FadingEdgesContentType
 import com.gigamole.composefadingedges.content.scrollconfig.FadingEdgesScrollConfig
 import com.gigamole.composefadingedges.verticalFadingEdges
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -150,43 +148,40 @@ fun LyricsView(
         }
     }
 
-    // Update current position only each lyrics change.
-    LaunchedEffect(mediaController, lyrics) {
-        var trackingJob: Job = Job()
-        val scope = CoroutineScope(Dispatchers.Main)
+    var isPlaying by remember { mutableStateOf(mediaController?.isPlaying == true) }
 
-        if (mediaController?.isPlaying == true) {
-            trackingJob = scope.launch {
-                var position = mediaController.currentPosition.toInt()
-                currentPosition = position
+    // Reset position on song change (lyrics list changes = new song)
+    LaunchedEffect(lyrics) {
+        currentPosition = mediaController?.currentPosition?.toInt() ?: 0
+        currentLyricIndex.intValue = -1
+    }
 
-                while (isActive) {
-                    position = mediaController.currentPosition.toInt()
-                    currentPosition = position
-                    delay(getNextUpdateDelay(position, lyrics).milliseconds)
-                }
+    // Listener with proper cleanup via DisposableEffect
+    DisposableEffect(mediaController) {
+        val listener = object : Player.Listener {
+            override fun onIsPlayingChanged(playing: Boolean) {
+                isPlaying = playing
             }
         }
+        mediaController?.addListener(listener)
+        isPlaying = mediaController?.isPlaying ?: false
+        onDispose {
+            mediaController?.removeListener(listener)
+        }
+    }
 
-        mediaController?.addListener(object : Player.Listener {
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                super.onIsPlayingChanged(isPlaying)
-                if (isPlaying) {
-                    if (trackingJob.isActive) return
+    // Position tracking loop, restarted on lyrics or isPlaying change
+    LaunchedEffect(mediaController, lyrics, isPlaying) {
+        if (mediaController == null || !isPlaying) return@LaunchedEffect
 
-                    trackingJob = scope.launch {
-                        var position = mediaController.currentPosition.toInt()
-                        currentPosition = position
+        var position = mediaController.currentPosition.toInt()
+        currentPosition = position
 
-                        while (isActive) {
-                            position = mediaController.currentPosition.toInt()
-                            currentPosition = position
-                            delay(getNextUpdateDelay(position, lyrics).milliseconds)
-                        }
-                    }
-                } else trackingJob.cancel()
-            }
-        })
+        while (isActive) {
+            position = mediaController.currentPosition.toInt()
+            currentPosition = position
+            delay(getNextUpdateDelay(position, lyrics).milliseconds)
+        }
     }
 
     // Lyric index updates and scrolling
