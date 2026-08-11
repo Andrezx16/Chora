@@ -26,7 +26,7 @@ class LrclibDataSourceTest {
         trackName: String = "",
         artistName: String = "",
         albumName: String = "",
-        duration: Int = 0,
+        duration: Double = 0.0,
         instrumental: Boolean = false,
         plainLyrics: String? = "Some lyrics",
         syncedLyrics: String? = null,
@@ -106,7 +106,7 @@ class LrclibDataSourceTest {
     @Test
     fun `scoreCandidate - exact title and artist match`() {
         // albumName is blank (default), so album gives partial credit +0.05
-        val candidate = searchResult(trackName = "Maradona", artistName = "Hades66", duration = 137)
+        val candidate = searchResult(trackName = "Maradona", artistName = "Hades66", duration = 137.0)
         val score = dataSource.scoreCandidate(candidate, "Maradona", "Hades66", "MARADONA", 137)
         // title(0.40) + artist(0.35) + duration_exact(0.15) + album_blank_partial(0.05) = 0.95
         assertEquals(0.95, score, 0.01)
@@ -114,7 +114,7 @@ class LrclibDataSourceTest {
 
     @Test
     fun `scoreCandidate - title match but different artist`() {
-        val candidate = searchResult(trackName = "Maradona", artistName = "Different Artist", duration = 137)
+        val candidate = searchResult(trackName = "Maradona", artistName = "Different Artist", duration = 137.0)
         val score = dataSource.scoreCandidate(candidate, "Maradona", "Hades66", "MARADONA", 137)
         // title(0.40) + artist_no_match(0.0) + duration_exact(0.15) + album_blank_partial(0.05) = 0.60
         assertEquals(0.60, score, 0.01)
@@ -122,7 +122,7 @@ class LrclibDataSourceTest {
 
     @Test
     fun `scoreCandidate - artist contains query artist`() {
-        val candidate = searchResult(trackName = "Maradona", artistName = "Anubiis, Hades66", duration = 137)
+        val candidate = searchResult(trackName = "Maradona", artistName = "Anubiis, Hades66", duration = 137.0)
         val score = dataSource.scoreCandidate(candidate, "Maradona", "Hades66", "MARADONA", 137)
         // title(0.40) + artist_contains(0.35) + duration_exact(0.15) + album_blank_partial(0.05) = 0.95
         assertEquals(0.95, score, 0.01)
@@ -130,7 +130,7 @@ class LrclibDataSourceTest {
 
     @Test
     fun `scoreCandidate - duration within 30s adds points`() {
-        val candidate = searchResult(trackName = "Maradona", artistName = "Hades66", duration = 120)
+        val candidate = searchResult(trackName = "Maradona", artistName = "Hades66", duration = 120.0)
         val score = dataSource.scoreCandidate(candidate, "Maradona", "Hades66", "MARADONA", 137)
         // title(0.40) + artist(0.35) + duration_17s(0.10) + album_blank_partial(0.05) = 0.90
         assertEquals(0.90, score, 0.01)
@@ -138,7 +138,7 @@ class LrclibDataSourceTest {
 
     @Test
     fun `scoreCandidate - duration far off adds less`() {
-        val candidate = searchResult(trackName = "Maradona", artistName = "Hades66", duration = 300)
+        val candidate = searchResult(trackName = "Maradona", artistName = "Hades66", duration = 300.0)
         val score = dataSource.scoreCandidate(candidate, "Maradona", "Hades66", "MARADONA", 137)
         // title(0.40) + artist(0.35) + duration_163s_no_match(0.0) + album_blank_partial(0.05) = 0.80
         assertEquals(0.80, score, 0.01)
@@ -146,7 +146,7 @@ class LrclibDataSourceTest {
 
     @Test
     fun `scoreCandidate - album match adds points`() {
-        val candidate = searchResult(trackName = "Maradona", artistName = "Hades66", albumName = "MARADONA", duration = 137)
+        val candidate = searchResult(trackName = "Maradona", artistName = "Hades66", albumName = "MARADONA", duration = 137.0)
         val score = dataSource.scoreCandidate(candidate, "Maradona", "Hades66", "MARADONA", 137)
         // title(0.40) + artist(0.35) + duration_exact(0.15) + album_exact(0.10) = 1.00
         assertEquals(1.00, score, 0.01)
@@ -154,7 +154,7 @@ class LrclibDataSourceTest {
 
     @Test
     fun `scoreCandidate - no album match gives zero album points`() {
-        val candidate = searchResult(trackName = "Maradona", artistName = "Hades66", albumName = "Different Album", duration = 137)
+        val candidate = searchResult(trackName = "Maradona", artistName = "Hades66", albumName = "Different Album", duration = 137.0)
         val score = dataSource.scoreCandidate(candidate, "Maradona", "Hades66", "MARADONA", 137)
         // title(0.40) + artist(0.35) + duration_exact(0.15) + album_no_match(0.0) = 0.90
         assertEquals(0.90, score, 0.01)
@@ -162,7 +162,7 @@ class LrclibDataSourceTest {
 
     @Test
     fun `scoreCandidate - completely different song`() {
-        val candidate = searchResult(trackName = "Bohemian Rhapsody", artistName = "Queen", duration = 354)
+        val candidate = searchResult(trackName = "Bohemian Rhapsody", artistName = "Queen", duration = 354.0)
         val score = dataSource.scoreCandidate(candidate, "Maradona", "Hades66", "MARADONA", 137)
         // title(0.0) + artist(0.0) + duration_far(0.0) + album_blank_partial(0.05) = 0.05
         assertEquals(0.05, score, 0.01)
@@ -170,7 +170,7 @@ class LrclibDataSourceTest {
 
     @Test
     fun `scoreCandidate - title match but no duration available`() {
-        val candidate = searchResult(trackName = "Maradona", artistName = "Hades66", duration = 0)
+        val candidate = searchResult(trackName = "Maradona", artistName = "Hades66", duration = 0.0)
         val score = dataSource.scoreCandidate(candidate, "Maradona", "Hades66", "MARADONA", 137)
         // title(0.40) + artist(0.35) + duration_cand_zero_partial(0.05) + album_blank_partial(0.05) = 0.85
         assertEquals(0.85, score, 0.01)
@@ -178,7 +178,7 @@ class LrclibDataSourceTest {
 
     @Test
     fun `scoreCandidate - artist split match gives partial artist score`() {
-        val candidate = searchResult(trackName = "Maradona", artistName = "Completely Unknown", duration = 137)
+        val candidate = searchResult(trackName = "Maradona", artistName = "Completely Unknown", duration = 137.0)
         val score = dataSource.scoreCandidate(candidate, "Maradona", "Hades66", "MARADONA", 137)
         // title(0.40) + artist_no_match(0.0) + duration_exact(0.15) + album_blank_partial(0.05) = 0.60
         assertEquals(0.60, score, 0.01)
@@ -189,9 +189,9 @@ class LrclibDataSourceTest {
     @Test
     fun `pickBestCandidate - selects highest scoring candidate`() {
         val candidates = listOf(
-            searchResult(trackName = "Maradona", artistName = "Some Other", duration = 137),
-            searchResult(trackName = "Maradona", artistName = "Hades66", duration = 137),
-            searchResult(trackName = "Maradona", artistName = "Unknown", duration = 300)
+            searchResult(trackName = "Maradona", artistName = "Some Other", duration = 137.0),
+            searchResult(trackName = "Maradona", artistName = "Hades66", duration = 137.0),
+            searchResult(trackName = "Maradona", artistName = "Unknown", duration = 300.0)
         )
         val best = dataSource.pickBestCandidate(candidates, "Maradona", "Hades66", "MARADONA", 137)
         assertNotNull(best)
@@ -201,7 +201,7 @@ class LrclibDataSourceTest {
     @Test
     fun `pickBestCandidate - returns null when all below threshold`() {
         val candidates = listOf(
-            searchResult(trackName = "Completely Different", artistName = "Nobody", duration = 999)
+            searchResult(trackName = "Completely Different", artistName = "Nobody", duration = 999.0)
         )
         val best = dataSource.pickBestCandidate(candidates, "Maradona", "Hades66", "MARADONA", 137)
         assertNull(best)
@@ -216,7 +216,7 @@ class LrclibDataSourceTest {
     @Test
     fun `pickBestCandidate - case insensitive title match`() {
         val candidates = listOf(
-            searchResult(trackName = "maradona", artistName = "Hades66", duration = 137)
+            searchResult(trackName = "maradona", artistName = "Hades66", duration = 137.0)
         )
         val best = dataSource.pickBestCandidate(candidates, "Maradona", "Hades66", "MARADONA", 137)
         assertNotNull(best)
@@ -225,7 +225,7 @@ class LrclibDataSourceTest {
     @Test
     fun `pickBestCandidate - artist partial match in candidate`() {
         val candidates = listOf(
-            searchResult(trackName = "Maradona", artistName = "Anubiis, Hades66", duration = 140)
+            searchResult(trackName = "Maradona", artistName = "Anubiis, Hades66", duration = 140.0)
         )
         val best = dataSource.pickBestCandidate(candidates, "Maradona", "Hades66", "MARADONA", 137)
         assertNotNull(best)
@@ -234,8 +234,8 @@ class LrclibDataSourceTest {
     @Test
     fun `pickBestCandidate - instrumental results are skipped`() {
         val candidates = listOf(
-            searchResult(trackName = "Maradona", artistName = "Hades66", duration = 137, instrumental = true),
-            searchResult(trackName = "Maradona", artistName = "Hades66", duration = 137, plainLyrics = "Real lyrics")
+            searchResult(trackName = "Maradona", artistName = "Hades66", duration = 137.0, instrumental = true),
+            searchResult(trackName = "Maradona", artistName = "Hades66", duration = 137.0, plainLyrics = "Real lyrics")
         )
         val best = dataSource.pickBestCandidate(candidates, "Maradona", "Hades66", "MARADONA", 137)
         assertNotNull(best)

@@ -47,7 +47,7 @@ data class LrcLibSearchResult(
     val trackName: String = "",
     val artistName: String = "",
     val albumName: String = "",
-    val duration: Int = 0,
+    val duration: Double = 0.0,
     val instrumental: Boolean = false,
     val plainLyrics: String? = null,
     val syncedLyrics: String? = null,

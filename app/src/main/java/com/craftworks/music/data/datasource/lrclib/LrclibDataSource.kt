@@ -39,6 +39,7 @@ import kotlinx.serialization.json.Json
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.roundToInt
 
 @Singleton
 class LrclibDataSource @Inject constructor(
@@ -241,7 +242,7 @@ class LrclibDataSource @Inject constructor(
 
         // Duration: +0.15 (within 30s) or +0.05 (within 60s)
         if (queryDuration != null && candidate.duration > 0) {
-            val diff = kotlin.math.abs(queryDuration - candidate.duration)
+            val diff = kotlin.math.abs(queryDuration - candidate.duration.roundToInt())
             when {
                 diff <= 5 -> score += 0.15
                 diff <= 30 -> score += 0.10
