@@ -99,6 +99,33 @@ class LrclibDataSourceTest {
         assertTrue(variants.contains("Hades66"))
     }
 
+    // --- primaryArtist tests ---
+
+    @Test
+    fun `primaryArtist - single artist returns itself`() {
+        assertEquals("Hades66", dataSource.primaryArtist("Hades66"))
+    }
+
+    @Test
+    fun `primaryArtist - comma-separated returns first`() {
+        assertEquals("Anubiis", dataSource.primaryArtist("Anubiis, Hades66"))
+    }
+
+    @Test
+    fun `primaryArtist - ampersand-separated returns first`() {
+        assertEquals("Anubiis", dataSource.primaryArtist("Anubiis & Hades66"))
+    }
+
+    @Test
+    fun `primaryArtist - semicolon-separated returns first`() {
+        assertEquals("Artist1", dataSource.primaryArtist("Artist1; Artist2"))
+    }
+
+    @Test
+    fun `primaryArtist - three artists returns first`() {
+        assertEquals("A", dataSource.primaryArtist("A, B, C"))
+    }
+
     // --- scoreCandidate tests ---
     // Weights: title=0.40, artist=0.35, duration=0.15, album=0.10
     // Fallbacks: no-duration=0.05, blank-album=0.05

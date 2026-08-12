@@ -103,10 +103,20 @@ class LrclibDataSource @Inject constructor(
             return@withContext relaxedResult
         }
 
-        // Stage 3: search endpoint - title + artist, evaluate candidates with scoring
-        val searchResult = trySearch(baseUrl, title, artist, album, duration, ignoreCachedResponse)
+        // Stage 3: exact match with primary artist only
+        val primary = primaryArtist(artist)
+        if (primary != artist) {
+            val primaryResult = tryGetRelaxed(baseUrl, primary, title, ignoreCachedResponse)
+            if (primaryResult != null) {
+                Log.d("LRCLIB", "Stage 3: primary artist match ($primary)")
+                return@withContext primaryResult
+            }
+        }
+
+        // Stage 4: search endpoint - title + primary artist, evaluate candidates with scoring
+        val searchResult = trySearch(baseUrl, title, primary, artist, album, duration, ignoreCachedResponse)
         if (searchResult != null) {
-            Log.d("LRCLIB", "Stage 3: search match found")
+            Log.d("LRCLIB", "Stage 4: search match found")
             return@withContext searchResult
         }
 
@@ -171,7 +181,8 @@ class LrclibDataSource @Inject constructor(
     private suspend fun trySearch(
         baseUrl: String,
         title: String,
-        artist: String,
+        searchArtist: String,
+        queryArtist: String,
         album: String?,
         duration: Int?,
         ignoreCachedResponse: Boolean
@@ -180,12 +191,12 @@ class LrclibDataSource @Inject constructor(
             val response = client.get(baseUrl) {
                 url { appendPathSegments("api", "search") }
                 parameter("track_name", title)
-                parameter("artist_name", artist)
+                parameter("artist_name", searchArtist)
                 header(HttpHeaders.UserAgent, USER_AGENT)
                 cacheControlHeader(ignoreCachedResponse)
             }
             val candidates: List<LrcLibSearchResult> = response.body()
-            val best = pickBestCandidate(candidates, title, artist, album, duration) ?: return null
+            val best = pickBestCandidate(candidates, title, queryArtist, album, duration) ?: return null
             Log.d("LRCLIB", "Search best: '${best.trackName}' by '${best.artistName}' (score computed)")
             if (best.instrumental || best.isLyricsEmpty()) null
             else LyricsResult(best.toLyrics(), name, detectSyncType(best))
@@ -195,6 +206,11 @@ class LrclibDataSource @Inject constructor(
         } catch (e: Exception) {
             e.printStackTrace(); null
         }
+    }
+
+    internal fun primaryArtist(artist: String): String {
+        val variants = artistVariants(artist)
+        return if (variants.size > 1) variants[1] else artist
     }
 
     // --- Matching logic (internal for testing) ---

@@ -107,15 +107,12 @@ class NowPlayingViewModel @Inject constructor (
             val extractedColors = palette.filterNotNull()
             _paletteColors.value = extractedColors
 
-            val averageLuminance = extractedColors.map { ColorUtils.calculateLuminance(it.toArgb()) }.average()
-            _isBackgroundDark.value = averageLuminance <= 0.5f
-
+            // Non-PLAIN backgrounds always have a dark overlay, so force white text
+            _isBackgroundDark.value = true
             _iconTextColor.value = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                if (_isBackgroundDark.value) dynamicDarkColorScheme(context).onBackground
-                else dynamicLightColorScheme(context).onBackground
+                dynamicDarkColorScheme(context).onBackground
             } else {
-                if (_isBackgroundDark.value) Color.White
-                else Color.Black
+                Color.White
             }
         }
     }
